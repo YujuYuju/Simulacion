@@ -1,36 +1,37 @@
 globals ;; Para definir las variables globales.
 [
-  
+
 ]
 
 to init-globals ;; Para darle valor inicial a las variables globales.
-  
+
 end
 
 to setup ;; Para inicializar la simulación.
-  ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches + 
+  ca           ;; Equivale a clear-ticks + clear-turtles + clear-patches +
                ;; clear-drawing + clear-all-plots + clear-output.
-               
+  set-default-shape turtles "car"
   init-globals ;; Para inicializar variables globales.
-  
+
   ;; Para crear tortugas e inicializar tortugas y parcelas además.
   ask patches
   [
     P-init
   ]
-  crt 1
+  crt cantidadCarros
   [
     T-init
   ]
-  
+
   reset-ticks  ;; Para inicializar el contador de ticks.
 end
 
 to go ;; Para ejecutar la simulación.
   ask turtles [T-comportamientoPrincipal]
+  ask turtles [T-move]
   tick
   actualizar-salidas
-  if ticks >= 25  ;; En caso de que la simulación esté controlada por cantidad de ticks.
+  if ticks >= 250  ;; En caso de que la simulación esté controlada por cantidad de ticks.
     [stop]
 end
 
@@ -49,15 +50,60 @@ end
 
 turtles-own ;; Para definir los atributos de las tortugas.
 [
-  
+  velocidadMaxima
+  respetaLeyes?
+  cortesiaIndividual
+  velocidad
 ]
 
 to T-init ;; Para inicializar una tortuga a la vez.
+  let pat patches with[pcolor = black and not any? other turtles-here]
+  ifelse count pat > 0
+  [
+    move-to one-of pat
+    ]
+  [
+    die
+    ]
+  set heading 90
+  set velocidad 1
+  set velocidadMaxima random 2 + 2
+  let x random-float 1
+  ifelse x < cumplimientoReglas
+  [  set respetaLeyes? true]
+  [ set respetaLeyes? false]
 
 end
 
 to T-comportamientoPrincipal ;; Se debería cambiar el nombre para que represente algo signficativo en la simulación.
-  
+
+end
+
+to T-move
+
+  ifelse velocidad < clear-ahead
+  [move-to patch-ahead velocidad
+    if velocidad < velocidadMaxima
+    [set velocidad velocidad + 1]]
+  [move-to patch-ahead clear-ahead
+    set velocidad clear-ahead]
+
+end
+
+to-report clear-ahead
+  let n 0
+  repeat velocidadMaxima
+  [
+    if not any? turtles-on patch-ahead (n + 1)
+    [
+      set n n + 1
+      ]
+    ]
+  report n
+end
+
+to crash
+
 end
 
 ;;*******************************
@@ -66,11 +112,36 @@ end
 
 patches-own ;; Para definir los atributos de las parcelas.
 [
-  
+
 ]
 
 to P-init ;; Para inicializar una parcela a la vez.
-  
+   set pcolor green
+   ifelse cantidadCarriles = 1
+   [
+      if abs pycor <= 0
+        [ set pcolor black ]
+   ]
+   [
+     ifelse cantidadCarriles = 2
+     [
+        if pycor <= 1 and pycor >= 0
+        [ set pcolor black ]
+     ]
+     [
+       ifelse cantidadCarriles = 3
+       [
+         if abs pycor <= 1
+        [ set pcolor black ]
+       ]
+       [
+         if pycor <= 2 and pycor >= -1
+         [ set pcolor black ]
+       ]
+     ]
+
+   ]
+
 end
 
 ;;***************************************
@@ -79,21 +150,21 @@ end
 
 links-own ;; Para definir los atributos de los links o conexiones.
 [
-  
+
 ]
 
 to L-init ;; Para inicializar un link o conexión a la vez.
-  
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-210
-10
-649
-470
+376
+117
+960
+339
 16
-16
-13.0
+5
+17.4
 1
 10
 1
@@ -105,8 +176,8 @@ GRAPHICS-WINDOW
 1
 -16
 16
--16
-16
+-5
+5
 0
 0
 1
@@ -147,6 +218,77 @@ NIL
 NIL
 1
 
+SLIDER
+9
+121
+181
+154
+cantidadCarros
+cantidadCarros
+0
+100
+46
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+10
+187
+182
+220
+contesía
+contesía
+0
+1
+0.5
+0.1
+1
+NIL
+HORIZONTAL
+
+SWITCH
+14
+320
+181
+353
+semaforoInteligente
+semaforoInteligente
+1
+1
+-1000
+
+SLIDER
+13
+253
+185
+286
+cumplimientoReglas
+cumplimientoReglas
+0
+1
+0.5
+0.1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+118
+439
+290
+472
+cantidadCarriles
+cantidadCarriles
+1
+4
+1
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## ¿DE QUÉ SE TRATA?
 
@@ -176,7 +318,7 @@ NIL
 
 (características interesantes o inusuales de NetLogo que usa el modelo, particularmente de código; o cómo se logra implementar características inexistentes)
 
-## MODELOS RELACIONADOS 
+## MODELOS RELACIONADOS
 
 (otros modelos de interés disponibles en la Librería de Modelos de NetLogo o en otros repositorios de modelos)
 
@@ -196,7 +338,7 @@ NIL
 ## 1  Objetivos:
 ( 1.1  )
 ## 2  Entidades, variables de estado y escalas:
-( 2.1 ) 
+( 2.1 )
 ## 3  Visión del proceso y programación:
 ( 3.1  )
 
@@ -533,7 +675,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.0.2
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
@@ -541,9 +683,9 @@ NetLogo 5.0.2
 @#$#@#$#@
 default
 0.0
--0.2 0 1.0 0.0
+-0.2 0 0.0 1.0
 0.0 1 1.0 0.0
-0.2 0 1.0 0.0
+0.2 0 0.0 1.0
 link direction
 true
 0
