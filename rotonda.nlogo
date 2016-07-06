@@ -113,16 +113,20 @@ to setup
     ]
     if pxcor < -107 and pxcor > -153 and (abs pycor < 20)
     [
-      set pcolor grey
+      set pcolor yellow - 2
       ]
   ]
   reset-ticks
 end
 
 to distribuir-carros  ;; procedure
-  set heading random 4 * 90
+  set heading random 4 * 90 ;; genera un numero con valores de 0, 90, 180, 270 -> esto equivale a 0 hacia el norte, 90 hacia el este, 180 hacia el sur y 270 hacia el oeste
   if (heading = 0)
-    [setxy 6 (38 + random (max-pycor - 38)) * (2 * random 2 - 1)
+    [let x random 2
+      ifelse x = 0
+      [set x 6]
+      [set x -123]
+      setxy x (38 + random (max-pycor - 38)) * (2 * random 2 - 1)
       if (color = red)
       [set xcor (xcor + 9)]
     ]
@@ -132,7 +136,11 @@ to distribuir-carros  ;; procedure
       [set ycor (ycor - 9)]
     ]
   if (heading = 180)
-    [setxy -6 ((38 + random (max-pycor - 38)) * (2 * random 2 - 1))
+    [ let x random 2
+      ifelse x = 0
+      [set x 6]
+      [set x -137]
+      setxy x ((38 + random (max-pycor - 38)) * (2 * random 2 - 1))
       if (color = red)
       [set xcor (xcor - 9)]
     ]
@@ -172,7 +180,8 @@ to avance
   let miDir heading
   set direccion (subtract-headings miDir (towardsxy 0 0))
   let dist00 distancexy 0 0
-  ifelse(carril = 0)[
+  ifelse(carril = 0)
+  [
     ;coloca los carros rojos en los carriles antes de entrar a la pista
     if(ycor < -120 and heading = 0)[
       set Pos random (100)
@@ -218,13 +227,13 @@ to avance
       ]
       set carril 1
     ]
-    ;fin coloca rojos
+   ; fin coloca rojos
   ]
   [ ;else carril = 0
     if(ycor >= -115 and heading = 0)[
       set carril 0
     ]
-    if(xcor >= -115 and heading = 90)[
+    if(xcor >= -195 and heading = 90)[
       set carril 0
     ]
     if(ycor <= 115 and heading = 180)[
@@ -368,11 +377,7 @@ to porpista
         [ set velocidad velocidad + Aceleracion ] ; fin carrosFrente
       ]
       [ set velocidad velocidad + Aceleracion ] ; fin carrosMismaDir
-    ] ; fin distancexy 0 0
-      ;  if ( (distancexy 0 0) > 15 and (distancexy 0 0) < 16.7)
-      ; [
-      ;  let carros-45degree carros with [(subtract-headings heading miDir = -45) ]
-      ;  ]
+    ]
     if ( distCentro > 25 and distCentro < 50 )
     [
       let d distCentro - 25
@@ -1676,8 +1681,8 @@ end
 GRAPHICS-WINDOW
 384
 12
-1033
-523
+1034
+524
 -1
 120
 1.996
@@ -1742,8 +1747,8 @@ SLIDER
 NumCarros
 NumCarros
 1
-80
-80
+120
+59
 1
 1
 NIL
@@ -1981,7 +1986,7 @@ CHOOSER
 Regla
 Regla
 "Cambia cuando hay mucha presa" "Cambia cuando llega al final" "Cambia apenas pueda"
-0
+1
 
 BUTTON
 81
