@@ -194,7 +194,7 @@ to avance
       ]
       set carril 1
     ]
-    if(xcor < -120 and heading = 90)[
+    if(xcor < -200 and heading = 90)[
       set Pos random (100)
       ifelse(Pos < 50)
       [
@@ -1748,7 +1748,7 @@ NumCarros
 NumCarros
 1
 120
-59
+94
 1
 1
 NIL
