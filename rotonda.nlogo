@@ -155,23 +155,18 @@ end
 
 to go
   ask carros [avance]
+  ask carros [t-desvio]
   tick
   ;if ticks > 30000 [stop]
 end
 
 to seleccionaRegla
-  if(Regla = "Cambia cuando hay mucha presa")[
-    presa
-    ;set color  black
-  ]
-  if(Regla = "Cambia cuando llega al final")[
-    final
-    ;set color  yellow
-  ]
-  if(Regla = "Cambia apenas pueda")[
-    cambio
-    ;set color  white
-  ]
+  if(Regla = "Cambia cuando hay mucha presa")
+  [presa ];set color  black]
+  if(Regla = "Cambia cuando llega al final")
+  [final ];set color  yellow]
+  if(Regla = "Cambia apenas pueda")
+  [cambio ];set color  white]
 end
 
 
@@ -185,77 +180,67 @@ to avance
     ;coloca los carros rojos en los carriles antes de entrar a la pista
     if(ycor < -120 and heading = 0)[
       set Pos random (100)
-      ifelse(Pos < 50)
+      ifelse(Pos < 25)
+      [set xcor 15]
       [
-        set xcor 15
-      ]
-      [
-        set xcor 6
+        ifelse pos < 50
+        [set xcor 6]
+        [
+          ifelse pos < 75
+          [set xcor -112]
+          [set xcor -122]
+        ]
       ]
       set carril 1
     ]
     if(xcor < -200 and heading = 90)[
       set Pos random (100)
       ifelse(Pos < 50)
-      [
-        set ycor -15
-      ]
-      [
-        set ycor -6
-      ]
+      [set ycor -15]
+      [set ycor -6]
       set carril 1
     ]
     if(ycor > 120 and heading = 180)[
       set Pos random (100)
-      ifelse(Pos < 50)
+     ifelse(Pos < 25)
+      [set xcor -15]
       [
-        set xcor -15
-      ]
-      [
-        set xcor -6
+        ifelse pos < 50
+        [set xcor -6]
+        [
+          ifelse pos < 75
+          [set xcor -137]
+          [set xcor -148]
+        ]
       ]
       set carril 1
     ]
     if(xcor > 120 and heading = 270)[
       set Pos random (100)
       ifelse(Pos < 50)
-      [
-        set ycor 15
-      ]
-      [
-        set ycor 6
-      ]
+      [set ycor 15]
+      [set ycor 6]
       set carril 1
     ]
    ; fin coloca rojos
   ]
   [ ;else carril = 0
-    if(ycor >= -115 and heading = 0)[
-      set carril 0
-    ]
-    if(xcor >= -195 and heading = 90)[
-      set carril 0
-    ]
-    if(ycor <= 115 and heading = 180)[
-      set carril 0
-    ]
-    if(xcor <= 115 and heading = 270)[
-      set carril 0
-    ]
+    if(ycor >= -115 and heading = 0)
+    [set carril 0]
+    if(xcor >= -195 and heading = 90)
+    [set carril 0]
+    if(ycor <= 115 and heading = 180)
+    [set carril 0]
+    if(xcor <= 115 and heading = 270)
+    [set carril 0]
   ]
 
   ifelse color = red and dist00 < 26.7;31.7
-  [
-    porfuera
-  ]
+  [porfuera]
   [
     ifelse dist00 <= 15
-    [
-      pordentro
-    ]
-    [
-      porpista
-    ]
+    [pordentro]
+    [porpista]
   ]
 end
 
@@ -281,13 +266,9 @@ to porfuera
         let desaceleraParada (velocidad ^ 2 / (2 * (d - 12)))
         set velocidad velocidad - desaceleraParada
       ]
-      [
-        set velocidad velocidad + Aceleracion
-      ]
+      [set velocidad velocidad + Aceleracion]
     ]
-    [
-      set velocidad velocidad + Aceleracion
-    ]
+    [set velocidad velocidad + Aceleracion]
     if (velocidad > VelocidadMaxAfuera) [set velocidad VelocidadMaxAfuera]
     if (velocidad < VelocidadMin) [set velocidad VelocidadMin]
 
@@ -348,12 +329,9 @@ to porpista
       [
         let carrosFrente1 other carrosMismaDir with [(distance myself) != 0 and (towards myself) != miDir]
         let carrosFrente other carrosMismaDir with [(distance myself) != 0 and (towards myself) != miDir]
-        ifelse(miDir = 0 or miDir = 180)[
-          set carrosFrente other carrosFrente1 with [xcor = ([xcor] of myself)]
-        ]
-        [
-          set carrosFrente other carrosFrente1 with [ycor = ([ycor] of myself)]
-        ]
+        ifelse(miDir = 0 or miDir = 180)
+        [ set carrosFrente other carrosFrente1 with [xcor = ([xcor] of myself)] ]
+        [ set carrosFrente other carrosFrente1 with [ycor = ([ycor] of myself)] ]
         ifelse any? carrosFrente
         [
           let carroMasCerca (min-one-of carrosFrente [distance myself])
@@ -419,17 +397,11 @@ to porpista
       set vmax sqrt(VelocidadMax ^ 2 - 2 * Desaceleracion * (DesacelerEntRot - distDesdeRot)) ; DesacelerEntRot = (v^2 - v0^2)/(2a)
     ]
     if vmax > VelocidadMax
-    [
-      set vmax VelocidadMax
-    ]
+    [set vmax VelocidadMax]
     if velocidad > vmax
-    [
-      set velocidad vmax
-    ]
+    [set velocidad vmax]
     if velocidad < VelocidadMin
-    [
-      set velocidad VelocidadMin
-    ]
+    [set velocidad VelocidadMin]
   ]
   ;esta esperando cambio de carril
   [
@@ -1637,7 +1609,7 @@ to coordinaDireccion
     [
       ;set xcor 15
     ]
-    [set xcor 6]
+    [];set xcor 6]
   ]
   if (heading > 85 and heading < 95)
   [
@@ -1646,7 +1618,7 @@ to coordinaDireccion
     [
       ; set ycor -15
     ]
-    [set ycor -6]
+    [];set ycor -6]
   ]
   if (heading > 175 and heading < 185)
   [
@@ -1655,7 +1627,7 @@ to coordinaDireccion
     [
       ;set xcor -15
     ]
-    [set xcor -6]
+    [];set xcor -6]
   ]
   if (heading > 265 and heading < 275)
   [
@@ -1664,8 +1636,12 @@ to coordinaDireccion
     [
       ;set ycor 15
     ]
-    [set ycor 6]
+    [];set ycor 6]
   ]
+
+end
+
+
 
 
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1673,10 +1649,44 @@ to coordinaDireccion
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;Intersección
-
-
-
-end
+  to T-desvio
+    if (heading = 0 and xcor = -112 and ycor > -15 and ycor < -14)
+    [
+      let r random 5
+      if r = 0
+      [
+        set heading 90
+        set ycor -15
+      ]
+    ]
+    if (heading = 270 and xcor > -113 and xcor < -111 and ycor > 14 and ycor < 16)
+    [
+      let r random 5
+      if r = 0
+      [
+        set heading 0
+        set xcor -112
+      ]
+    ]
+    if (heading = 90 and xcor > -149 and xcor < -148 and ycor = -15)
+    [
+      let r random 5
+      if r = 0
+      [
+        set heading 180
+        set xcor -148
+      ]
+    ]
+    if (heading = 180 and xcor = -148 and ycor < 15 and ycor > 14)
+    [
+      let r random 5
+      if r = 0
+      [
+        set heading 270
+        set ycor 15
+      ]
+    ]
+  end
 @#$#@#$#@
 GRAPHICS-WINDOW
 384
