@@ -208,40 +208,40 @@ end
 to go
   ask carros [avance]
   ask carros [t-desvio]
-  
+
     if ticks mod (120 + 30) = 0
     [ switch ]
     if ticks mod (120 + 30) > 120
     [ ask patches with [pcolor = green]
       [ set pcolor yellow ]
     ]
-  
+
   tick
   ;if ticks > 30000 [stop]
 end
-to switch		
-  ifelse semaforo = "north"		
-  [ set semaforo "east"		
-	draw-semaforo		
-  ]		
-  [ set semaforo "north"		
-	draw-semaforo		
-  ]		
+to switch
+  ifelse semaforo = "north"
+  [ set semaforo "east"
+	draw-semaforo
+  ]
+  [ set semaforo "north"
+	draw-semaforo
+  ]
 end
 
 
-to-report clear-ahead ;;turtle procedure		
-  let n 1		
-  repeat Aceleracion + velocidad  ;; look ahead the number of patches that could be travelled		
-  [ if (n * dx + pxcor <= max-pxcor) and (n * dy + pycor <= max-pycor)		
-	[ if([pcolor] of patch-ahead n = red) or		
-		([pcolor] of patch-ahead n = orange) or		
-		(any? turtles-on patch-ahead n)		
-	  [ report n ]		
-	  set n n + 1		
-	]		
-  ]		
-  report n		
+to-report clear-ahead ;;turtle procedure
+  let n 1
+  repeat Aceleracion + velocidad  ;; look ahead the number of patches that could be travelled
+  [ if (n * dx + pxcor <= max-pxcor) and (n * dy + pycor <= max-pycor)
+	[ if([pcolor] of patch-ahead n = red) or
+		([pcolor] of patch-ahead n = orange) or
+		(any? turtles-on patch-ahead n)
+	  [ report n ]
+	  set n n + 1
+	]
+  ]
+  report n
 end
 to seleccionaRegla
   if(Regla = "Cambia cuando hay mucha presa")
@@ -324,16 +324,16 @@ to avance
     ifelse dist00 <= 15
     [pordentro]
     [porpista]
-	
-	  let clear-to clear-ahead		
-	  ifelse clear-to > velocidad		
-	  [ if velocidad < VelocidadMaxAfuera		
-	    [ set velocidad velocidad + min (list Aceleracion (clear-to - 1 - velocidad)) ] ;; accelerate		
-	    if velocidad > VelocidadMaxAfuera		
-	    [ set velocidad VelocidadMaxAfuera ] ;; but don't velocidad		
-	  ]		
-	  [ set velocidad velocidad - min (list Desaceleracion (velocidad - (clear-to - 1))) ;; brake		
-	    if velocidad < 0 [ set velocidad 0 ]		
+
+	  let clear-to clear-ahead
+	  ifelse clear-to > velocidad
+	  [ if velocidad < VelocidadMaxAfuera
+	    [ set velocidad velocidad + min (list Aceleracion (clear-to - 1 - velocidad)) ] ;; accelerate
+	    if velocidad > VelocidadMaxAfuera
+	    [ set velocidad VelocidadMaxAfuera ] ;; but don't velocidad
+	  ]
+	  [ set velocidad velocidad - min (list Desaceleracion (velocidad - (clear-to - 1))) ;; brake
+	    if velocidad < 0 [ set velocidad 0 ]
 	  ]
   ]
 end
@@ -1787,17 +1787,28 @@ end
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     to hacerSemaforo
-      if (CumpleLey = 0)
+      if ((distancexy -126 -122) < 10 or (distancexy -135 -139) < 20)
       [
-        ]
-      if (CumpleLey = 1)
+      if (CumpleLey = 1 and semaforo= red and random 2=1)
       [
+        ;;parar a veces
+        set velocidad 0
         ]
-      if (CumpleLey = 2)
+      if (CumpleLey = 1 and semaforo= yellow and random 2=1)
       [
+        set velocidad VelocidadMin
         ]
+      if (CumpleLey = 2 and semaforo= red)
+      [
+         ;;parar siempre
+        set velocidad 0
+        ]
+      if (CumpleLey = 2 and semaforo= yellow)
+      [
+        set velocidad VelocidadMin
+        ]
+      ]
     end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 384
