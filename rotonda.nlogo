@@ -1,7 +1,7 @@
 ;Built in NetLogo 5.2.1
 
 globals [ CarroEnf CarrosTransitados Desaceleracion VelocidadMax VelocidadMin VelocidadMaxAdentro VelocidadMaxAfuera DistanciaRotDirecto
-  DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos]
+  DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos CumpleLey]
 breed [ carros carro ]
 turtles-own [ velocidad distanciaRot direccion espera carril]
 
@@ -27,6 +27,7 @@ to setup
   set SeparacionMin 8; asuma el tamaño de carro = 3m y separacion = 5m
   set TiempoReaccion 100; 100 ticks = 1s es el tiempo de reaccion
   set Pos 0;
+  set CumpleLey 1;
 
   create-carros NumCarros
   [
@@ -39,6 +40,7 @@ to setup
     distribuir-carros
     set espera 0
     set carril 0
+    set CumpleLey random 3
   ]
   set CarroEnf one-of carros
   ;watch CarroEnf
@@ -1687,6 +1689,20 @@ end
       ]
     ]
   end
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    to hacerSemaforo
+      if (CumpleLey = 0)
+      [
+        ]
+      if (CumpleLey = 1)
+      [
+        ]
+      if (CumpleLey = 2)
+      [
+        ]
+    end
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 384
