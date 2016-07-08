@@ -1,8 +1,9 @@
 ;Built in NetLogo 5.2.1
 
 globals [ CarroEnf CarrosTransitados Desaceleracion VelocidadMax VelocidadMin VelocidadMaxAdentro VelocidadMaxAfuera DistanciaRotDirecto
-  DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos CumpleLey semaforo]
+  DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos CumpleLey estadoSemaforo]
 breed [ carros carro ]
+breed [ sems sem ]
 turtles-own [ velocidad distanciaRot direccion espera carril]
 
 to setup
@@ -42,6 +43,28 @@ to setup
     set carril 0
     set CumpleLey random 3
   ]
+  create-sems 1
+  [
+   set color red
+   set shape "square"
+    set size 7
+    setxy -141 -7
+  ]
+  create-sems 1
+  [
+   set color green
+   set shape "square"
+    set size 7
+    setxy -112 6
+  ]
+  create-sems 1
+  [
+   set color green
+   set shape "square"
+    set size 7
+    setxy -112 15
+  ]
+  set estadoSemaforo "estadoUno"
   set CarroEnf one-of carros
   ;watch CarroEnf
   ask patches
@@ -118,59 +141,11 @@ to setup
       set pcolor yellow - 2
       ]
   ]
-  set semaforo "north"
-  draw-semaforo
+
   reset-ticks
 end
 
-to draw-semaforo
-  ifelse semaforo = "north"
-  [
-    ask patches
-    [
-      if pxcor > -126 and pxcor < -122
-      [
-        if pycor < 4 and pycor > 0
-        [
-          set pcolor red
-        ]
-      ]
-    ]
-    ask patches
-    [
-      if pxcor < -135 and pxcor > -139
-      [
-        if pycor > -8 and pycor < -4
-        [
-          set pcolor green
-        ]
-      ]
-    ]
-  ]
 
-
-  [ ask patches
-    [
-      if pxcor > -126 and pxcor < -122
-      [
-        if pycor < 4 and pycor > 0
-        [
-          set pcolor green
-        ]
-      ]
-    ]
-    ask patches
-    [
-      if pxcor < -135 and pxcor > -139
-      [
-        if pycor > -8 and pycor < -4
-        [
-          set pcolor red
-        ]
-      ]
-    ]
-  ]
-end
 to distribuir-carros  ;; procedure
   set heading random 4 * 90 ;; genera un numero con valores de 0, 90, 180, 270 -> esto equivale a 0 hacia el norte, 90 hacia el este, 180 hacia el sur y 270 hacia el oeste
   if (heading = 0)
@@ -208,41 +183,24 @@ end
 to go
   ask carros [avance]
   ask carros [t-desvio]
+  ask carros [parar]
 
-    if ticks mod (120 + 30) = 0
-    [ switch ]
-    if ticks mod (120 + 30) > 120
-    [ ask patches with [pcolor = green]
-      [ set pcolor yellow ]
+
+  if (semaforosInteligentes = false)[
+    if (ticks mod (500 + 120) = 0)
+    [
+      switch
     ]
-
+    if ticks mod (500 + 120) > 500
+    [ ask sems with [color = green]
+      [ set color yellow ]
+    ]
+  ]
   tick
   ;if ticks > 30000 [stop]
 end
-to switch
-  ifelse semaforo = "north"
-  [ set semaforo "east"
-	draw-semaforo
-  ]
-  [ set semaforo "north"
-	draw-semaforo
-  ]
-end
 
 
-to-report clear-ahead ;;turtle procedure
-  let n 1
-  repeat Aceleracion + velocidad  ;; look ahead the number of patches that could be travelled
-  [ if (n * dx + pxcor <= max-pxcor) and (n * dy + pycor <= max-pycor)
-	[ if([pcolor] of patch-ahead n = red) or
-		([pcolor] of patch-ahead n = orange) or
-		(any? turtles-on patch-ahead n)
-	  [ report n ]
-	  set n n + 1
-	]
-  ]
-  report n
-end
 to seleccionaRegla
   if(Regla = "Cambia cuando hay mucha presa")
   [presa ];set color  black]
@@ -325,16 +283,6 @@ to avance
     [pordentro]
     [porpista]
 
-	  let clear-to clear-ahead
-	  ifelse clear-to > velocidad
-	  [ if velocidad < VelocidadMaxAfuera
-	    [ set velocidad velocidad + min (list Aceleracion (clear-to - 1 - velocidad)) ] ;; accelerate
-	    if velocidad > VelocidadMaxAfuera
-	    [ set velocidad VelocidadMaxAfuera ] ;; but don't velocidad
-	  ]
-	  [ set velocidad velocidad - min (list Desaceleracion (velocidad - (clear-to - 1))) ;; brake
-	    if velocidad < 0 [ set velocidad 0 ]
-	  ]
   ]
 end
 
@@ -1784,31 +1732,81 @@ end
       ]
     ]
   end
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    to hacerSemaforo
-      if ((distancexy -126 -122) < 10 or (distancexy -135 -139) < 20)
-      [
-      if (CumpleLey = 1 and semaforo= red and random 2=1)
-      [
-        ;;parar a veces
-        set velocidad 0
+  to parar
+    ;foreach [3 4 5 6 7 8 9 10 11 12 13 14 15] [
+      ;ask patch-ahead ?
+      ;[
+      ;  set pcolor yellow
+      ;]
+      ;if ( [pcolor] of patch-ahead ? = 43 and [pxcor] of patch-ahead ? = -110)[
+      ;  ask patch-ahead ?
+      ;  [
+      ;    set pcolor yellow
+      ;  ]
+      ;]
+
+      ;if (any? sems-on patch-ahead 15)
+      ;  [ show sems-on patch-ahead 15
+      ;    if [pcolor] of patch-ahead 15 = 43[show who]
+      ;    ]
+      ;]
+      ;if ( [color] of sems in-cone 10 30 = 43)[
+      ;  set pcolor red
+      ;]
+      ;ask sems in-cone 10 30 [ show color ]
+      show [color] of sems in-cone 10 30
+
+
+
+  end
+
+  to switch
+      ifelse estadoSemaforo = "estadoUno"
+      [ set estadoSemaforo "estadoDos"
+
+        ask sem (NumCarros + 1) [
+          set color red
         ]
-      if (CumpleLey = 1 and semaforo= yellow and random 2=1)
-      [
-        set velocidad VelocidadMin
-        ]
-      if (CumpleLey = 2 and semaforo= red)
-      [
-         ;;parar siempre
-        set velocidad 0
-        ]
-      if (CumpleLey = 2 and semaforo= yellow)
-      [
-        set velocidad VelocidadMin
+        ask sem NumCarros [
+          set color green
         ]
       ]
-    end
+      [ set estadoSemaforo "estadoUno"
+
+        ask sem (NumCarros + 1) [
+          set color green
+        ]
+        ask sem NumCarros [
+          set color red
+        ]
+      ]
+  end
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ;to hacerSemaforo
+    ;  if ((distancexy -126 -122) < 10 or (distancexy -135 -139) < 20)
+    ;  [
+    ;  if (CumpleLey = 1 and semaforo= red and random 2)
+    ;  [
+    ;    ;;parar a veces
+    ;    set velocidad 0
+    ;    ]
+    ;  if (CumpleLey = 1 and semaforo= yellow and random 2)
+    ;  [
+    ;    set velocidad VelocidadMin
+    ;    ]
+    ;  if (CumpleLey = 2 and semaforo= red)
+    ;  [
+    ;     ;;parar siempre
+    ;    set velocidad 0
+    ;    ]
+    ;  if (CumpleLey = 2 and semaforo= yellow)
+    ;  [
+    ;    set velocidad VelocidadMin
+    ;    ]
+    ;  ]
+    ;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 384
@@ -2477,7 +2475,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.3.1
+NetLogo 5.2.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
