@@ -4,6 +4,8 @@ globals [ CarroEnf CarrosTransitados Desaceleracion VelocidadMax VelocidadMin Ve
   DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos CumpleLey estadoSemaforo]
 breed [ carros carro ]
 breed [ sems sem ]
+sems-own[ tipo ]
+carros-own [detenidoCarros? detenidoSemaforo? chocado]
 turtles-own [ velocidad distanciaRot direccion espera carril]
 
 to setup
@@ -42,27 +44,45 @@ to setup
     set espera 0
     set carril 0
     set CumpleLey random 3
+    set detenidoCarros? false
+    set detenidoSemaforo? false
+    set chocado 0
   ]
   create-sems 1
   [
    set color red
    set shape "square"
     set size 7
-    setxy -141 -7
+    setxy -117 -15
+    set heading 0
+    set tipo 1
   ]
   create-sems 1
   [
-   set color green
+   set color red
    set shape "square"
     set size 7
-    setxy -112 6
+    setxy -143 16
+        set heading 180
+    set tipo 1
   ]
   create-sems 1
   [
-   set color green
-   set shape "square"
+    set color green
+    set shape "square"
     set size 7
-    setxy -112 15
+    setxy -148 -9
+    set heading 90
+    set tipo 2
+  ]
+  create-sems 1
+  [
+    set color green
+    set shape "square"
+    set size 7
+    setxy -112 9
+        set heading 270
+    set tipo 2
   ]
   set estadoSemaforo "estadoUno"
   set CarroEnf one-of carros
@@ -181,17 +201,19 @@ to distribuir-carros  ;; procedure
 end
 
 to go
-  ask carros [avance]
-  ask carros [t-desvio]
-  ask carros [parar]
+  ask carros with[detenidosemaforo? = false and detenidoCarros? = false and chocado <= 0] [avance]
+  ;ask carros [t-desvio]
+  ask carros[frenar]
+  ask carros [pararSemaforo]
+  choque
 
 
   if (semaforosInteligentes = false)[
-    if (ticks mod (500 + 120) = 0)
+    if (ticks mod (800) = 0)
     [
       switch
     ]
-    if ticks mod (500 + 120) > 500
+    if ticks mod (800) > 400
     [ ask sems with [color = green]
       [ set color yellow ]
     ]
@@ -1733,30 +1755,70 @@ end
     ]
   end
 
-  to parar
-    ;foreach [3 4 5 6 7 8 9 10 11 12 13 14 15] [
-      ;ask patch-ahead ?
-      ;[
-      ;  set pcolor yellow
-      ;]
-      ;if ( [pcolor] of patch-ahead ? = 43 and [pxcor] of patch-ahead ? = -110)[
-      ;  ask patch-ahead ?
-      ;  [
-      ;    set pcolor yellow
-      ;  ]
-      ;]
+  to pararSemaforo
 
-      ;if (any? sems-on patch-ahead 15)
-      ;  [ show sems-on patch-ahead 15
-      ;    if [pcolor] of patch-ahead 15 = 43[show who]
-      ;    ]
-      ;]
-      ;if ( [color] of sems in-cone 10 30 = 43)[
-      ;  set pcolor red
-      ;]
-      ;ask sems in-cone 10 30 [ show color ]
-      show [color] of sems in-cone 10 30
+    if (heading = 0 and xcor > -127 and xcor < -110 and ycor > -22 and ycor < -19)
+    [
 
+      let x sems with [heading = 0]
+      ifelse [color] of x = [15]
+      [
+        let r random-float 1
+        ifelse r <= apegoLey and chocado = 0
+        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? false]
+      ]
+      [set detenidoSemaforo? false]
+
+    ]
+    if (heading = 90 and xcor > -153 and xcor < -151 and ycor > -20 and ycor < -2)
+    [
+     let x sems with [heading = 90]
+      ifelse [color] of x = [15]
+      [
+                let r random-float 1
+        ifelse r <= apegoLey and chocado = 0
+        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? false]
+        ]
+      [set detenidoSemaforo? false]
+    ]
+    if (heading = 180 and xcor > -152 and xcor < -132 and ycor < 20 and ycor > 18)
+    [
+      let x sems with [heading = 180]
+      ifelse [color] of x = [15]
+      [ let r random-float 1
+        ifelse r <= apegoLey and chocado = 0
+        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? false]
+        ]
+      [set detenidoSemaforo? false]
+    ]
+    if (heading = 270 and xcor > -111 and xcor < -107 and ycor > 1 and ycor < 19)
+    [
+     let x sems with [heading = 270]
+      ifelse [color] of x = [15]
+      [        let r random-float 1
+        ifelse r <= apegoLey and chocado = 0
+        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? false]
+        ]
+      [set detenidoSemaforo? false]
+    ]
+  end
+
+  to frenar
+    if xcor < -50
+    [
+    let cars other carros in-cone 6 60
+    ifelse count cars > 0
+    [let r random-float 1
+     ifelse r <= apegoLey and chocado = 0
+     [set detenidoCarros? true]
+     [set detenidoCarros? false]
+     ]
+    [set detenidoCarros? false]
+    ]
 
 
   end
@@ -1765,23 +1827,54 @@ end
       ifelse estadoSemaforo = "estadoUno"
       [ set estadoSemaforo "estadoDos"
 
-        ask sem (NumCarros + 1) [
-          set color red
-        ]
-        ask sem NumCarros [
-          set color green
-        ]
+        ask sems with[tipo = 1]
+        [set color red]
+        ask sems with[tipo = 2]
+        [set color green]
       ]
       [ set estadoSemaforo "estadoUno"
 
-        ask sem (NumCarros + 1) [
-          set color green
-        ]
-        ask sem NumCarros [
-          set color red
-        ]
+        ask sems with[tipo = 1]
+        [set color green]
+        ask sems with[tipo = 2]
+        [set color red]
       ]
   end
+
+  to choque
+    ask carros with [chocado = 1]
+    [
+      set chocado -100
+      set label ""
+      ;;set detenidoCarros? false
+    ]
+        ask carros with [chocado < 0]
+    [
+      set chocado chocado + 1
+      set label ""
+      ;;set detenidoCarros? false
+    ]
+        ask carros with [chocado = -1]
+    [
+      set chocado 0
+      set label ""
+      ;;set detenidoCarros? false
+    ]
+
+    ask carros with [chocado > 0] [set chocado chocado - 1]
+    let choques patches with [count turtles-here > 1]
+    if count choques > 0
+    [ ask carros-on choques
+      [
+        if chocado = 0
+        [ set chocado random 500 set label chocado ]
+      ]
+    ]
+
+
+  end
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     ;to hacerSemaforo
@@ -1878,7 +1971,7 @@ NumCarros
 NumCarros
 1
 120
-94
+71
 1
 1
 NIL
@@ -2145,6 +2238,21 @@ semaforosInteligentes
 1
 1
 -1000
+
+SLIDER
+210
+22
+382
+55
+apegoLey
+apegoLey
+0
+1
+0.9
+0.1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -2475,7 +2583,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.2.1
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
