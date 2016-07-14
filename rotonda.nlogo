@@ -54,7 +54,7 @@ to setup
    set shape "square"
     set size 7
     setxy -117 -15
-    set heading 0
+    set heading 180
     set tipo 1
   ]
   create-sems 1
@@ -63,7 +63,7 @@ to setup
    set shape "square"
     set size 7
     setxy -143 16
-        set heading 180
+        set heading 0
     set tipo 1
   ]
   create-sems 1
@@ -72,7 +72,7 @@ to setup
     set shape "square"
     set size 7
     setxy -148 -9
-    set heading 90
+    set heading 270
     set tipo 2
   ]
   create-sems 1
@@ -81,7 +81,7 @@ to setup
     set shape "square"
     set size 7
     setxy -112 9
-        set heading 270
+        set heading 90
     set tipo 2
   ]
   set estadoSemaforo "estadoUno"
@@ -219,21 +219,25 @@ end
 
 to go
   ask carros with[detenidosemaforo? = false and detenidoCarros? = false and chocado <= 0] [avance]
-  ;ask carros [t-desvio]
+  ask carros [t-desvio]
   ask carros[frenar]
   ask carros [pararSemaforo]
   choque
 
 
-  if (semaforosInteligentes = false)[
+  ifelse (semaforosInteligentes = false)
+  [
     if (ticks mod (800) = 0)
     [
-      switch
+      S-basico
     ]
     if ticks mod (800) > 400
     [ ask sems with [color = green]
       [ set color yellow ]
     ]
+  ]
+  [
+    ask sems [if color = red [S-inteligente]]
   ]
   tick
   ;if ticks > 30000 [stop]
@@ -1773,8 +1777,7 @@ end
   end
 
   to pararSemaforo
-
-    if (heading = 0 and xcor > -127 and xcor < -110 and ycor > -22 and ycor < -19)
+    if (heading = 0 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 180] > 0)
     [
 
       let x sems with [heading = 0]
@@ -1788,7 +1791,7 @@ end
       [set detenidoSemaforo? false]
 
     ]
-    if (heading = 90 and xcor > -153 and xcor < -151 and ycor > -20 and ycor < -2)
+    if (heading = 90 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 270] > 0)
     [
      let x sems with [heading = 90]
       ifelse [color] of x = [15]
@@ -1800,7 +1803,7 @@ end
         ]
       [set detenidoSemaforo? false]
     ]
-    if (heading = 180 and xcor > -152 and xcor < -132 and ycor < 20 and ycor > 18)
+    if (heading = 180 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 0] > 0)
     [
       let x sems with [heading = 180]
       ifelse [color] of x = [15]
@@ -1811,7 +1814,7 @@ end
         ]
       [set detenidoSemaforo? false]
     ]
-    if (heading = 270 and xcor > -111 and xcor < -107 and ycor > 1 and ycor < 19)
+    if (heading = 270 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 90] > 0)
     [
      let x sems with [heading = 270]
       ifelse [color] of x = [15]
@@ -1840,7 +1843,7 @@ end
 
   end
 
-  to switch
+  to S-basico
       ifelse estadoSemaforo = "estadoUno"
       [ set estadoSemaforo "estadoDos"
 
@@ -1856,6 +1859,13 @@ end
         ask sems with[tipo = 2]
         [set color red]
       ]
+  end
+
+  to S-inteligente
+    let cars carros in-cone 60 60 with [heading = ([heading] of myself + 180) mod 360]
+    if count cars > 5
+    [S-basico]
+
   end
 
   to choque
@@ -1879,7 +1889,7 @@ end
     ]
 
     ask carros with [chocado > 0] [set chocado chocado - 1]
-    let choques patches with [count turtles-here > 1]
+    let choques patches with [count carros-here > 1]
     if count choques > 0
     [ ask carros-on choques
       [
@@ -2252,7 +2262,7 @@ SWITCH
 581
 semaforosInteligentes
 semaforosInteligentes
-1
+0
 1
 -1000
 
@@ -2265,7 +2275,7 @@ apegoLey
 apegoLey
 0
 1
-0.9
+1
 0.1
 1
 NIL
