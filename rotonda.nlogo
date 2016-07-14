@@ -160,6 +160,23 @@ to setup
     [
       set pcolor yellow - 2
       ]
+
+     if (pycor) = -20 and (abs (pxcor) > 107)
+    [
+      set pcolor blue
+    ]
+         if (pycor) = 20 and (abs (pxcor) > 107)
+    [
+      set pcolor blue
+    ]
+         if (pxcor) = -107 and (abs (pycor) > 0)
+    [
+      set pcolor blue
+    ]
+         if (pxcor) = -152 and (abs (pycor) > 0)
+    [
+      set pcolor blue
+    ]
   ]
 
   reset-ticks
