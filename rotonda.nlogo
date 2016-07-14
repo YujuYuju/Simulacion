@@ -1,7 +1,7 @@
 ;Built in NetLogo 5.2.1
 
 globals [ CarroEnf CarrosTransitados Desaceleracion VelocidadMax VelocidadMin VelocidadMaxAdentro VelocidadMaxAfuera DistanciaRotDirecto
-  DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos CumpleLey estadoSemaforo]
+  DistanciaRotIzquierda DistanciaRotDerecha GradosPorM RadioRot DesacelerEntRot DistanciaRotRecta DistanciaAlCentro TiempoReaccion Pos CumpleLey estadoSemaforo choquesTotal]
 breed [ carros carro ]
 breed [ sems sem ]
 sems-own[ tipo ]
@@ -1890,6 +1890,8 @@ end
 
     ask carros with [chocado > 0] [set chocado chocado - 1]
     let choques patches with [count carros-here > 1]
+
+    set choquesTotal (choquesTotal + choques)
     if count choques > 0
     [ ask carros-on choques
       [
@@ -2280,6 +2282,16 @@ apegoLey
 1
 NIL
 HORIZONTAL
+
+CHOOSER
+88
+594
+267
+639
+Delay
+Delay
+"Nada" "Mucho" "Poco"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
