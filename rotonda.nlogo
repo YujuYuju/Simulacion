@@ -1891,7 +1891,7 @@ end
     ask carros with [chocado > 0] [set chocado chocado - 1]
     let choques patches with [count carros-here > 1]
 
-    set choquesTotal (choquesTotal + choques)
+    set choquesTotal (choquesTotal + count choques)
     if count choques > 0
     [ ask carros-on choques
       [
@@ -2292,6 +2292,17 @@ Delay
 Delay
 "Nada" "Mucho" "Poco"
 0
+
+MONITOR
+1268
+23
+1361
+68
+Choques Total
+choquesTotal
+17
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
