@@ -224,18 +224,15 @@ to go
   ask carros [pararSemaforo]
   choque
 
-
-  ifelse (semaforosInteligentes = false)
+  if (ticks mod (800) = 0)
   [
-    if (ticks mod (800) = 0)
-    [
       S-basico
-    ]
-    if ticks mod (800) > 400
-    [ ask sems with [color = green]
-      [ set color yellow ]
-    ]
   ]
+  if ticks mod (800) > 600
+  [ ask sems with [color = green]
+      [ set color yellow ]
+  ]
+  if (semaforosInteligentes = true)
   [
     ask sems [if color = red [S-inteligente]]
   ]
@@ -1873,32 +1870,27 @@ end
     [
       set chocado -100
       set label ""
-      ;;set detenidoCarros? false
     ]
         ask carros with [chocado < 0]
     [
       set chocado chocado + 1
       set label ""
-      ;;set detenidoCarros? false
-    ]
-        ask carros with [chocado = -1]
-    [
-      set chocado 0
-      set label ""
-      ;;set detenidoCarros? false
     ]
 
     ask carros with [chocado > 0] [set chocado chocado - 1]
     let choques patches with [count carros-here > 1]
-
-    set choquesTotal (choquesTotal + count choques)
-    if count choques > 0
-    [ ask carros-on choques
+    ask choques
       [
-        if chocado = 0
-        [ set chocado random 500 set label chocado ]
+        let r random 500
+        ask carros-here[
+          if chocado = 0
+          [ show "choque"
+            show ceiling (choquesTotal + 0.5)
+            set choquesTotal ceiling (choquesTotal + 0.5)
+             set chocado r set label chocado
+          ]
+        ]
       ]
-    ]
 
 
   end
@@ -2000,7 +1992,7 @@ NumCarros
 NumCarros
 1
 120
-71
+101
 1
 1
 NIL
@@ -2277,7 +2269,7 @@ apegoLey
 apegoLey
 0
 1
-1
+0.4
 0.1
 1
 NIL
