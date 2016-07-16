@@ -5,7 +5,7 @@ globals [ CarroEnf CarrosTransitados Desaceleracion VelocidadMax VelocidadMin Ve
 breed [ carros carro ]
 breed [ sems sem ]
 sems-own[ tipo ]
-carros-own [detenidoCarros? detenidoSemaforo? chocado]
+carros-own [detenidoCarros? detenidoSemaforo? chocado delayCarro]
 turtles-own [ velocidad distanciaRot direccion espera carril]
 
 to setup
@@ -47,6 +47,13 @@ to setup
     set detenidoCarros? false
     set detenidoSemaforo? false
     set chocado 0
+    ifelse delay = "Nada"
+            [set delayCarro 0]
+            [
+              ifelse delay = "Poco"
+              [set delayCarro random 200]
+              [set delayCarro random 500]
+            ]
   ]
   create-sems 1
   [
@@ -218,12 +225,12 @@ to distribuir-carros  ;; procedure
 end
 
 to go
-  ask carros with[detenidosemaforo? = false and detenidoCarros? = false and chocado <= 0] [avance]
   ask carros [t-desvio]
   ask carros[frenar]
   ask carros [pararSemaforo]
+  ask carros with[detenidosemaforo? = false and detenidoCarros? = false and chocado <= 0] [avance]
   choque
-
+  limpiar-carros
   if (ticks mod (800) = 0)
   [
       S-basico
@@ -1777,47 +1784,65 @@ end
     if (heading = 0 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 180] > 0)
     [
 
-      let x sems with [heading = 0]
+      let x sems in-cone 10 160 with [heading = 180]
       ifelse [color] of x = [15]
       [
         let r random-float 1
         ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? true set velocidad 0]
         [set detenidoSemaforo? false]
       ]
-      [set detenidoSemaforo? false]
+      [
+        ifelse detenidoSemaforo? = true
+        [
+          ifelse delayCarro > 0
+          [ set delayCarro delayCarro - 1]
+          [
+            set detenidoSemaforo? false
+            ifelse delay = "Nada"
+            [set delayCarro 0]
+            [
+              ifelse delay = "Poco"
+              [set delayCarro random 200]
+              [set delayCarro random 500]
+            ]
+          ]
+        ]
+        [set detenidoSemaforo? false]
+      ]
 
     ]
     if (heading = 90 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 270] > 0)
     [
-     let x sems with [heading = 90]
+     let x sems in-cone 10 160  with [heading = 270]
       ifelse [color] of x = [15]
       [
-                let r random-float 1
+        let r random-float 1
         ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? true set velocidad 0 ]
         [set detenidoSemaforo? false]
         ]
       [set detenidoSemaforo? false]
     ]
     if (heading = 180 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 0] > 0)
     [
-      let x sems with [heading = 180]
+      let x sems in-cone 10 160 with [heading = 0]
+
       ifelse [color] of x = [15]
       [ let r random-float 1
         ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? true set velocidad 0 ]
         [set detenidoSemaforo? false]
         ]
       [set detenidoSemaforo? false]
     ]
     if (heading = 270 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 90] > 0)
     [
-     let x sems with [heading = 270]
+     let x sems in-cone 10 160 with [heading = 90]
       ifelse [color] of x = [15]
       [        let r random-float 1
         ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true]
+        [set detenidoSemaforo? true set velocidad 0 ]
         [set detenidoSemaforo? false]
         ]
       [set detenidoSemaforo? false]
@@ -1825,19 +1850,14 @@ end
   end
 
   to frenar
-    if xcor < -50
-    [
     let cars other carros in-cone 6 60
     ifelse count cars > 0
     [let r random-float 1
      ifelse r <= apegoLey and chocado = 0
-     [set detenidoCarros? true]
+     [set detenidoCarros? true set velocidad 0]
      [set detenidoCarros? false]
      ]
     [set detenidoCarros? false]
-    ]
-
-
   end
 
   to S-basico
@@ -1860,7 +1880,7 @@ end
 
   to S-inteligente
     let cars carros in-cone 60 60 with [heading = ([heading] of myself + 180) mod 360]
-    if count cars > 5
+    if count cars > 6
     [S-basico]
 
   end
@@ -1885,42 +1905,35 @@ end
         ask carros-here[
           if chocado = 0
           [ show "choque"
-            show ceiling (choquesTotal + 0.5)
             set choquesTotal ceiling (choquesTotal + 0.5)
              set chocado r set label chocado
+             set velocidad 0
           ]
         ]
       ]
+  end
 
+  to limpiar-carros
+    ask carros-on patches with [pxcor > 0 and pycor > 25]
+    [if heading != 0
+      [die]
+      ]
+    ask carros-on patches with [pxcor < 0 and pxcor > -50 and pycor > 25]
+    [if heading != 180
+      [die]
+    ]
+    ask carros-on patches with [pxcor > 0 and pycor < -25]
+    [if heading != 0
+      [die]
+      ]
+    ask carros-on patches with [pxcor < 0 and pxcor > -50 and pycor < -25]
+    [if heading != 180
+      [die]
+    ]
 
   end
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    ;to hacerSemaforo
-    ;  if ((distancexy -126 -122) < 10 or (distancexy -135 -139) < 20)
-    ;  [
-    ;  if (CumpleLey = 1 and semaforo= red and random 2)
-    ;  [
-    ;    ;;parar a veces
-    ;    set velocidad 0
-    ;    ]
-    ;  if (CumpleLey = 1 and semaforo= yellow and random 2)
-    ;  [
-    ;    set velocidad VelocidadMin
-    ;    ]
-    ;  if (CumpleLey = 2 and semaforo= red)
-    ;  [
-    ;     ;;parar siempre
-    ;    set velocidad 0
-    ;    ]
-    ;  if (CumpleLey = 2 and semaforo= yellow)
-    ;  [
-    ;    set velocidad VelocidadMin
-    ;    ]
-    ;  ]
-    ;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 384
@@ -2230,7 +2243,7 @@ CHOOSER
 Regla
 Regla
 "Cambia cuando hay mucha presa" "Cambia cuando llega al final" "Cambia apenas pueda"
-1
+2
 
 BUTTON
 81
@@ -2269,7 +2282,7 @@ apegoLey
 apegoLey
 0
 1
-0.4
+0.7
 0.1
 1
 NIL
@@ -2629,6 +2642,35 @@ NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+<experiments>
+  <experiment name="choques" repetitions="1" runMetricsEveryStep="true">
+    <setup>setup</setup>
+    <go>go</go>
+    <timeLimit steps="5000"/>
+    <metric>choquesTotal</metric>
+    <metric>(((sum [velocidad] of turtles) / (count turtles)) * 100) * 3.6</metric>
+    <enumeratedValueSet variable="NumCarros">
+      <value value="101"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Regla">
+      <value value="&quot;Cambia apenas pueda&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="SeparacionMin">
+      <value value="8"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="semaforosInteligentes">
+      <value value="false"/>
+      <value value="true"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Aceleracion">
+      <value value="0.0016"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="Delay">
+      <value value="&quot;Nada&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="apegoLey" first="0" step="0.1" last="1"/>
+  </experiment>
+</experiments>
 @#$#@#$#@
 @#$#@#$#@
 default
