@@ -51,8 +51,8 @@ to setup
             [set delayCarro 0]
             [
               ifelse delay = "Poco"
-              [set delayCarro random 200]
-              [set delayCarro random 500]
+              [set delayCarro random 100]
+              [set delayCarro random 150]
             ]
   ]
   create-sems 1
@@ -225,9 +225,9 @@ to distribuir-carros  ;; procedure
 end
 
 to go
-  ask carros [t-desvio]
-  ask carros[frenar]
-  ask carros [pararSemaforo]
+  ask carros [C-desvio]
+  ask carros[C-frenar]
+  ask carros [C-leerSemaforo]
   ask carros with[detenidosemaforo? = false and detenidoCarros? = false and chocado <= 0] [avance]
   choque
   limpiar-carros
@@ -1741,7 +1741,11 @@ end
       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;;Intersección
-  to T-desvio
+
+
+
+  ;;Métodos del agente carro
+  to C-desvio;;Asigna los giros en la intersección.
     if (heading = 0 and xcor = -112 and ycor > -15 and ycor < -14)
     [
       let r random 5
@@ -1780,76 +1784,78 @@ end
     ]
   end
 
-  to pararSemaforo
+  to C-leerSemaforo;;Según la dirección del carro, así les indica que lean el semáforo correspondiente
     if (heading = 0 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 180] > 0)
     [
-
       let x sems in-cone 10 160 with [heading = 180]
       ifelse [color] of x = [15]
-      [
-        let r random-float 1
-        ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true set velocidad 0]
-        [set detenidoSemaforo? false]
+      [C-pararSemaforo]
+      [ifelse detenidoSemaforo? = true
+      [C-delay]
+      [set detenidoSemaforo? false]
       ]
-      [
-        ifelse detenidoSemaforo? = true
-        [
-          ifelse delayCarro > 0
-          [ set delayCarro delayCarro - 1]
-          [
-            set detenidoSemaforo? false
-            ifelse delay = "Nada"
-            [set delayCarro 0]
-            [
-              ifelse delay = "Poco"
-              [set delayCarro random 200]
-              [set delayCarro random 500]
-            ]
-          ]
-        ]
-        [set detenidoSemaforo? false]
-      ]
-
     ]
+
     if (heading = 90 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 270] > 0)
     [
      let x sems in-cone 10 160  with [heading = 270]
       ifelse [color] of x = [15]
-      [
-        let r random-float 1
-        ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true set velocidad 0 ]
+      [C-pararSemaforo]
+      [ifelse detenidoSemaforo? = true
+        [C-delay]
         [set detenidoSemaforo? false]
-        ]
-      [set detenidoSemaforo? false]
+      ]
     ]
+
     if (heading = 180 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 0] > 0)
     [
       let x sems in-cone 10 160 with [heading = 0]
 
       ifelse [color] of x = [15]
-      [ let r random-float 1
-        ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true set velocidad 0 ]
+      [C-pararSemaforo]
+      [ifelse detenidoSemaforo? = true
+        [C-delay]
         [set detenidoSemaforo? false]
-        ]
-      [set detenidoSemaforo? false]
+      ]
     ]
+
     if (heading = 270 and [pcolor] of patch-here = 105 and count sems in-cone 10 160 with [heading = 90] > 0)
     [
      let x sems in-cone 10 160 with [heading = 90]
       ifelse [color] of x = [15]
-      [        let r random-float 1
-        ifelse r <= apegoLey and chocado = 0
-        [set detenidoSemaforo? true set velocidad 0 ]
+      [C-pararSemaforo]
+      [ifelse detenidoSemaforo? = true
+        [C-delay]
         [set detenidoSemaforo? false]
+      ]
+    ]
+
+  end
+
+  to C-pararSemaforo;;Cuando el agente detecta un semáforo con color rojo, le indica que frene
+    let r random-float 1
+    ifelse r <= apegoLey and chocado = 0
+    [set detenidoSemaforo? true set velocidad 0 ]
+    [set detenidoSemaforo? false]
+  end
+
+  to C-delay;;Asigna un tiempo de espera desde que se pone el semáforo en rojo hasta que puede avanzar el carro
+    ifelse delayCarro > 0
+    [ set delayCarro delayCarro - 1]
+      [
+        set detenidoSemaforo? false
+        ifelse delay = "Nada"
+        [set delayCarro 0]
+        [
+          ifelse delay = "Poco"
+          [set delayCarro random 100]
+          [set delayCarro random 150]
         ]
-      [set detenidoSemaforo? false]
     ]
   end
 
-  to frenar
+
+  to C-frenar;;Si identifica un carro al frente, le dice al agente que frene. Puede fallar  según el grado de apego a la ley
     let cars other carros in-cone 6 60
     ifelse count cars > 0
     [let r random-float 1
@@ -1860,7 +1866,11 @@ end
     [set detenidoCarros? false]
   end
 
-  to S-basico
+
+
+;;Métodos de los semáforos
+
+  to S-basico;;Cambia los estados de los semáforos
       ifelse estadoSemaforo = "estadoUno"
       [ set estadoSemaforo "estadoDos"
 
@@ -1878,24 +1888,24 @@ end
       ]
   end
 
-  to S-inteligente
-    let cars carros in-cone 60 60 with [heading = ([heading] of myself + 180) mod 360]
+  to S-inteligente;;Cuenta la cantidad de carros que hay al frente de un semáforo
+    let cars carros in-cone 60 50 with [heading = ([heading] of myself + 180) mod 360]
     if count cars > 6
     [S-basico]
 
   end
 
-  to choque
+
+
+;;Métodos del observador
+  to choque;;Cuenta la cantidad de choques que hay, detiene los carros chocados y les asigna un tiempo random para que puedan volver a circular
     ask carros with [chocado = 1]
     [
       set chocado -100
       set label ""
     ]
-        ask carros with [chocado < 0]
-    [
-      set chocado chocado + 1
-      set label ""
-    ]
+    ask carros with [chocado < 0]
+    [set chocado chocado + 1]
 
     ask carros with [chocado > 0] [set chocado chocado - 1]
     let choques patches with [count carros-here > 1]
@@ -1913,7 +1923,7 @@ end
       ]
   end
 
-  to limpiar-carros
+  to limpiar-carros;;Elimina los carros que andan contravía
     ask carros-on patches with [pxcor > 0 and pycor > 25]
     [if heading != 0
       [die]
@@ -1932,7 +1942,6 @@ end
     ]
 
   end
-
 
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -2005,7 +2014,7 @@ NumCarros
 NumCarros
 1
 120
-101
+110
 1
 1
 NIL
@@ -2282,7 +2291,7 @@ apegoLey
 apegoLey
 0
 1
-0.7
+0.9
 0.1
 1
 NIL
@@ -2296,7 +2305,7 @@ CHOOSER
 Delay
 Delay
 "Nada" "Mucho" "Poco"
-0
+1
 
 MONITOR
 1268
